@@ -10,21 +10,21 @@ const Board = () => {
   const [pieces, setPieces] = useState(initializePieces());
   const [selectedPiece, setSelectedPiece] = useState(null);
   const [validMoves, setValidMoves] = useState([]);
-  const [player, setPlayer] = useState(null); // The current player (red or white)
-  const [turn, setTurn] = useState('red'); // Game turn (starts with red)
+  const [player, setPlayer] = useState(null);
+  const [turn, setTurn] = useState('red');
 
   useEffect(() => {
-    // Listen for assigned player color from server
     socket.on('assignPlayer', ({ color }) => {
       setPlayer(color);
+      if (color === 'white') {
+        setTurn('white'); // White goes second
+      }
     });
 
-    // Update board when other player moves
     socket.on('updateBoard', (moveData) => {
       handleRemoteMove(moveData);
     });
 
-    // Reset board when reset button is clicked
     socket.on('resetBoard', () => {
       setPieces(initializePieces());
       setTurn('red');
@@ -32,7 +32,6 @@ const Board = () => {
       setValidMoves([]);
     });
 
-    // Notify when player joins or leaves
     socket.on('playerJoined', ({ color }) => {
       alert(`${color} player has joined the game.`);
     });
@@ -48,7 +47,6 @@ const Board = () => {
 
   function initializePieces() {
     const pieces = [];
-    // White pieces on rows 0, 1, 2
     for (let row = 0; row < 3; row++) {
       for (let col = 0; col < cols; col++) {
         if ((row + col) % 2 === 1) {
@@ -56,7 +54,6 @@ const Board = () => {
         }
       }
     }
-    // Red pieces on rows 5, 6, 7
     for (let row = 5; row < rows; row++) {
       for (let col = 0; col < cols; col++) {
         if ((row + col) % 2 === 1) {
@@ -78,13 +75,12 @@ const Board = () => {
 
   function calculateValidMoves(piece) {
     const moves = [];
-    const direction = piece.player === 'red' ? -1 : 1; // Red moves up, white moves down
+    const direction = piece.player === 'red' ? -1 : 1;
     const basicMoves = [
       { row: piece.row + direction, col: piece.col - 1 },
       { row: piece.row + direction, col: piece.col + 1 }
     ];
 
-    // Check for basic diagonal moves
     basicMoves.forEach(move => {
       if (isValidMove(move)) {
         moves.push({ ...move, capture: false });
@@ -96,7 +92,6 @@ const Board = () => {
 
   function isValidMove(move) {
     if (move.row >= 0 && move.row < rows && move.col >= 0 && move.col < cols) {
-      // Check if the square is a dark square and is unoccupied
       if ((move.row + move.col) % 2 === 1 && !pieces.some(p => p.row === move.row && p.col === move.col)) {
         return true;
       }
@@ -107,12 +102,12 @@ const Board = () => {
   function handleMoveClick(row, col) {
     const move = validMoves.find(m => m.row === row && m.col === col);
     if (selectedPiece && move) {
-      let updatedPieces = pieces.map(p =>
+      const updatedPieces = pieces.map(p =>
         p === selectedPiece ? { ...p, row, col } : p
       );
 
       setPieces(updatedPieces);
-      socket.emit('movePiece', { selectedPiece, move }); // Send move data to the server
+      socket.emit('movePiece', { selectedPiece, move });
       setTurn(turn === 'red' ? 'white' : 'red');
       setSelectedPiece(null);
       setValidMoves([]);
@@ -120,8 +115,10 @@ const Board = () => {
   }
 
   function handleRemoteMove({ selectedPiece, move }) {
-    let updatedPieces = pieces.map(p =>
-      p === selectedPiece ? { ...p, row: move.row, col: move.col } : p
+    const updatedPieces = pieces.map(p =>
+      p.row === selectedPiece.row && p.col === selectedPiece.col
+        ? { ...p, row: move.row, col: move.col }
+        : p
     );
 
     setPieces(updatedPieces);
@@ -129,7 +126,7 @@ const Board = () => {
   }
 
   function resetGame() {
-    socket.emit('resetGame'); // Emit reset game event to server
+    socket.emit('resetGame');
   }
 
   function renderSquare(row, col) {

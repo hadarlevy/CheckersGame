@@ -3,11 +3,7 @@
 }
 
 .board {
-  display: flex;
-  flex-direction: column;
-  margin: auto;
-  width: 320px;
-  height: 320px;
+  display: inline-block;
 }
 
 .row {
@@ -15,38 +11,36 @@
 }
 
 .square {
-  width: 40px;
-  height: 40px;
+  width: 50px;
+  height: 50px;
   display: flex;
-  align-items: center;
   justify-content: center;
-}
-
-.light {
-  background-color: #f0f0f0;
+  align-items: center;
+  cursor: pointer;
 }
 
 .dark {
-  background-color: #4db6ac;
+  background-color: #654321;
+}
+
+.light {
+  background-color: #f0d9a0;
 }
 
 .piece {
-  width: 30px;
-  height: 30px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
 }
 
-.piece.white {
-  background-color: white;
-  border: 1px solid black;
+.red {
+  background-color: red;
 }
 
-.piece.red {
-  background-color: red;
-  border: 1px solid black;
+.white {
+  background-color: white;
 }
 
 .valid-move {
-  background-color: yellow !important;
-  /* Highlight valid moves */
+  background-color: green;
 }
